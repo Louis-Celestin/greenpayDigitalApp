@@ -6,10 +6,9 @@ const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const authRoutes = require('./routes/authRoutes');
-const bodyParser = require('body-parser');
 // const userRoutes = require('./routes/userRoutes');
 const demandeRoutes = require('./routes/demandeRoutes');
-// const errorHandler = require('./middlewares/errorHandler');
+const multer = require('multer');
 
 // Configuration de l'environnement
 dotenv.config();
@@ -17,10 +16,7 @@ dotenv.config();
 // Initialisation de l'application Express
 const app = express();
 app.use(express.json());
-app.use(bodyParser.urlencoded({
-    extended : true
-}))
-// app.use(bodyParser())
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(helmet());
@@ -43,17 +39,13 @@ setupDatabase();
 // Définition des routes
 app.use('/api/auth', authRoutes);
 // app.use('/api/users', userRoutes);
-app.use('/api/demandes', demandeRoutes);
-
-// Gestion des erreurs
-// global.errorHandler = errorHandler;
-// app.use(errorHandler);
+app.use('/api/demandes', demandeRoutes); // multer sera appliqué dans demandeRoutes.js
 
 // Démarrage du serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
-}) 
+});
 
 // Fermeture propre de Prisma
 process.on('SIGINT', async () => {

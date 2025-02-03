@@ -29,18 +29,20 @@ model agents {
 }
 
 model demandes_paiement {
-  id                Int                       @id @default(autoincrement())
-  agent_id          Int
-  montant           Decimal                   @db.Decimal(10, 2)
-  motif             String                    @db.Text
-  statut            demandes_paiement_statut? @default(en_attente)
-  moyen_paiement_id Int
-  date_creation     DateTime                  @default(now()) @db.Timestamp(0)
-  agents            agents                    @relation(fields: [agent_id], references: [id], onUpdate: Restrict, map: "demandes_paiement_ibfk_1")
-  moyens_paiement   moyens_paiement           @relation(fields: [moyen_paiement_id], references: [id], onUpdate: Restrict, map: "demandes_paiement_ibfk_2")
-  factures          factures[]
-  proformas         proformas[]
-  validations       validations[]
+  id                   Int                       @id @default(autoincrement())
+  agent_id             Int
+  montant              Decimal                   @db.Decimal(10, 2)
+  motif                String                    @db.Text
+  moyen_paiement_id    Int
+  statut               demandes_paiement_statut? @default(validation_superieur_hierarchique)
+  requiert_proforma    Boolean?                  @default(false)
+  date_creation        DateTime                  @default(now()) @db.Timestamp(0)
+  agents               agents                    @relation(fields: [agent_id], references: [id], onUpdate: Restrict, map: "demandes_paiement_ibfk_1")
+  moyens_paiement      moyens_paiement           @relation(fields: [moyen_paiement_id], references: [id], onUpdate: Restrict, map: "demandes_paiement_ibfk_2")
+  evidence_de_paiement evidence_de_paiement[]
+  notifications        notifications[]
+  proformas            proformas[]
+  validations          validations[]
 
   @@index([agent_id], map: "agent_id")
   @@index([moyen_paiement_id], map: "moyen_paiement_id")
@@ -58,11 +60,12 @@ model directions {
   agents agents[]
 }
 
-model factures {
+model evidence_de_paiement {
   id                Int               @id @default(autoincrement())
   demande_id        Int
-  fichier           String            @db.VarChar(255)
-  demandes_paiement demandes_paiement @relation(fields: [demande_id], references: [id], onUpdate: Restrict, map: "factures_ibfk_1")
+  fichier_url       String            @db.VarChar(255)
+  date_ajout        DateTime          @default(now()) @db.Timestamp(0)
+  demandes_paiement demandes_paiement @relation(fields: [demande_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "evidence_de_paiement_ibfk_1")
 
   @@index([demande_id], map: "demande_id")
 }
@@ -79,6 +82,20 @@ model moyens_paiement {
   demandes_paiement demandes_paiement[]
 }
 
+model notifications {
+  id                Int               @id @default(autoincrement())
+  utilisateur_id    Int
+  demande_id        Int
+  message           String            @db.Text
+  lu                Boolean?          @default(false)
+  date_envoi        DateTime          @default(now()) @db.Timestamp(0)
+  utilisateurs      utilisateurs      @relation(fields: [utilisateur_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "notifications_ibfk_1")
+  demandes_paiement demandes_paiement @relation(fields: [demande_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "notifications_ibfk_2")
+
+  @@index([demande_id], map: "demande_id")
+  @@index([utilisateur_id], map: "utilisateur_id")
+}
+
 model permissions {
   id               Int                @id @default(autoincrement())
   nom              String             @unique(map: "nom") @db.VarChar(100)
@@ -89,7 +106,7 @@ model proformas {
   id                Int               @id @default(autoincrement())
   demande_id        Int
   fichier           String            @db.VarChar(255)
-  demandes_paiement demandes_paiement @relation(fields: [demande_id], references: [id], onUpdate: Restrict, map: "proformas_ibfk_1")
+  demandes_paiement demandes_paiement @relation(fields: [demande_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "proformas_ibfk_1")
 
   @@index([demande_id], map: "demande_id")
 }
@@ -128,6 +145,7 @@ model utilisateurs {
   mot_de_passe      String              @db.VarChar(255)
   agent_id          Int                 @unique(map: "agent_id")
   signature         String?             @db.VarChar(255)
+  notifications     notifications[]
   utilisateur_roles utilisateur_roles[]
   agents            agents              @relation(fields: [agent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "utilisateurs_ibfk_1")
   validations       validations[]
@@ -157,13 +175,16 @@ enum moyens_paiement_type {
   especes
 }
 
-enum demandes_paiement_statut {
-  en_attente @map("en attente")
-  approuv_   @map("approuvé")
-  rejet_     @map("rejeté")
-}
-
 enum validations_statut {
   approuv_ @map("approuvé")
   rejet_   @map("rejeté")
+}
+
+enum demandes_paiement_statut {
+  validation_superieur_hierarchique
+  validation_directeur_hierarchique
+  validation_DG
+  validation_DAF
+  pay_                              @map("payé")
+  rejet_                            @map("rejeté")
 }
