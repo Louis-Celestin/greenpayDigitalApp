@@ -1,106 +1,189 @@
-const bcryptjs = require("bcryptjs")
-require("dotenv").config
-const {PrismaClient} = require("@prisma/client")
-const  jwt = require("jsonwebtoken")
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { validationResult } = require("express-validator");
+const { envoyerEmail } = require("../../config/emailConfig")
+const cloudinary = require("../../config/cloudinaryConfig");
+const { error } = require("console");
+require("crypto")
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-// Enregistrement d'un utilisateur
-const userRegister = async (req, res) => { 
+/** ✅ REGISTER (Créer un compte) */
+const register = async (req, res) => {
     try {
-        const { email, mot_de_passe, agent_id, role_id } = req.body;
-        // console.log(req.body)
-        // Vérifier si l'email est déjà utilisé
-        const existingUser = await prisma.utilisateurs.findUnique({ where: { email } });
-        if (existingUser) return res.status(400).json({ message: "Cet email est déjà utilisé." });
+        const { email, mot_de_passe, agent_id } = req.body;
 
-        // Vérifier si l'agent existe
-        const agent = await prisma.agents.findUnique({ where: { id: Number(agent_id) } });
-        if (!agent) return res.status(404).json({ message: "Agent non trouvé." });
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-        // Hachage du mot de passe
-        const hashedPassword = await bcryptjs.hash(mot_de_passe, 10);
+        // Vérifier si l'email existe déjà
+        const exist = await prisma.utilisateurs.findUnique({ where: { email } });
+        if (exist) return res.status(400).json({ message: "Email déjà utilisé." });
 
-        // Création de l'utilisateur
-        const utilisateur = await prisma.utilisateurs.create({
-            data: {
-                email,
-                mot_de_passe: hashedPassword,
-                agent_id: Number(agent_id)
-            }
+        // Hasher le mot de passe
+        const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+
+        const user = await prisma.utilisateurs.create({
+            data: { email, mot_de_passe: hashedPassword, agent_id }
         });
 
-        // Assigner un rôle à l'utilisateur
-        await prisma.utilisateur_roles.create({
-            data: {
-                utilisateur_id: utilisateur.id,
-                role_id : Number(role_id)
-            }
-        });
-
-        res.status(201).json({ message: "Utilisateur enregistré avec succès.", utilisateur });
+        res.status(201).json({ message: "Utilisateur créé avec succès.", user });
     } catch (error) {
-        console.log(error)
         res.status(500).json({ message: "Erreur serveur.", error });
     }
-}
+};
 
-// Fonction de connexion
-const userLogin = async (req, res) => {
+/** ✅ LOGIN (Connexion) */
+const login = async (req, res) => {
     try {
         const { email, mot_de_passe } = req.body;
+        const user = await prisma.utilisateurs.findUnique({ where: { email } ,include:{agents:true}});
 
-        // Vérification de l'utilisateur
-        const utilisateur = await prisma.utilisateurs.findUnique({ where: { email },include:{agents:true} });
-        if (!utilisateur) return res.status(400).json({ message: 'Identifiants incorrects' });
+        if (!user) return res.status(401).json({ message: "Identifiants invalides." });
 
-        // Vérification du mot de passe
-        const isMatch = await bcryptjs.compare(mot_de_passe, utilisateur.mot_de_passe);
-        if (!isMatch) return res.status(400).json({ message: 'Identifiants incorrects' });
+        const isMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+        if (!isMatch) return res.status(401).json({ message: "Identifiants invalides." });
 
-        // Récupération du rôle de l'utilisateur
-        const roles = await prisma.utilisateur_roles.findMany({
-            where: { utilisateur_id: Number(utilisateur.id) },
-            include: { roles: true }
-        });
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-        // Création du token
-        const token = jwt.sign(
-            { id: utilisateur.id, roles: roles.map(r => r.roles.nom) },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
-        );
-        const role = roles.map(role=>role.roles.nom)
-        res.json({ message: 'Connexion réussie', token, role, utilisateur });
+        res.status(200).json({ message: "Connexion réussie.", token, user });
     } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: 'Erreur serveur', error });
+        res.status(500).json({ message: "Erreur serveur.", error });
     }
 };
 
-// Fonction de réinitialisation du mot de passe
-const userResetPassword = async (req, res) => {
+/** ✅ FORGOT PASSWORD (Demander réinitialisation) */
+const forgotPassword = async (req, res) => {
     try {
-        const { email, newPassword } = req.body;
+        const { email } = req.body;
+        const users = await prisma.utilisateurs.findMany({ where: { email } })
+        const user = users[0]
 
-        const utilisateur = await prisma.utilisateurs.findUnique({ where: { email } });
-        if (!utilisateur) return res.status(400).json({ message: 'Utilisateur non trouvé' });
+        if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
 
-        const hashedPassword = await bcryptjs.hash(newPassword, 10);
+        // 🔹 Génération d’un token sécurisé
+        const resetToken = crypto.randomUUID().toString("hex");
 
+        // 🔹 Stockage du token dans la base (expire dans 1h)
         await prisma.utilisateurs.update({
-            where: { email },
-            data: { mot_de_passe: hashedPassword },
+            where: { id: user.id },
+            data: { reset_token: resetToken, reset_expires: new Date(Date.now() + 3600000) }
         });
 
-        res.json({ message: 'Mot de passe réinitialisé avec succès' });
+        // 🔹 URL de réinitialisation (frontend)
+        const resetURL = `${process.env.FRONTEND_URL}/password/reset-password/${resetToken}`;
+
+        // 🔹 Envoi de l'email
+        const html = `
+            <h3>Demande de réinitialisation de mot de passe</h3>
+            <p>Bonjour ${user.email},</p>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+            <p>👉 <a href="${resetURL}">Cliquez ici pour réinitialiser votre mot de passe</a></p>
+            <p>Ce lien expire dans 1 heure.</p>
+            <p>Si vous n'avez pas fait cette demande, ignorez cet email.</p>
+        `;
+
+        await envoyerEmail(user.email, "Réinitialisation de votre mot de passe", html);
+
+        res.status(200).json({ message: "Email de réinitialisation envoyé." });
     } catch (error) {
-        res.status(500).json({ message: 'Erreur serveur', error });
+        console.error(error);
+        res.status(500).json({ message: "Erreur serveur.", error });
+    }
+};
+
+/** ✅ RESET PASSWORD (Réinitialiser avec le token) */
+const resetPassword = async (req, res) => {
+    // console.table(req.params)
+    try {
+        const { token } = req.params;
+        const { mot_de_passe } = req.body;
+        // console.log("ICI")
+        // 🔹 Vérifier si le token existe et n'a pas expiré
+        const user = await prisma.utilisateurs.findMany({
+            where: { reset_token: token, reset_expires: { gt: new Date() } }
+        });
+
+        // console.table(user)
+
+        if (!user) return res.status(400).json({ message: "Token invalide ou expiré." });
+
+        // 🔹 Hasher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+
+        // 🔹 Mettre à jour l'utilisateur et supprimer le token
+        await prisma.utilisateurs.updateMany({
+            where: { id : Number(user[0].id)},
+            data: { mot_de_passe: hashedPassword, reset_token: null, reset_expires: null }
+        }).then((ok)=>{
+            if(ok){
+                console.log(ok)
+            }else{
+                console.log("NON OK")
+            }
+        }).catch(error=>{console.table(error)})
+
+        res.status(200).json({ message: "Mot de passe réinitialisé avec succès." });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur.", error });
+    }
+};
+
+/** ✅ UPLOAD SIGNATURE */
+const uploadSignature = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!req.file) return res.status(400).json({ message: "Aucun fichier envoyé." });
+
+        const result = await cloudinary.uploader.upload(req.file.path);
+        await prisma.utilisateurs.update({
+            where: { id: Number(id) },
+            data: { signature: result.secure_url }
+        });
+
+        res.status(200).json({ message: "Signature mise à jour.", url: result.secure_url });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur.", error });
+    }
+};
+
+/** ✅ UPDATE USER */
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email, agent_id } = req.body;
+
+        const user = await prisma.utilisateurs.update({
+            where: { id: Number(id) },
+            data: { email, agent_id }
+        });
+
+        res.status(200).json({ message: "Utilisateur mis à jour.", user });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur.", error });
+    }
+};
+
+/** ✅ DELETE USER */
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.utilisateurs.delete({ where: { id: Number(id) } });
+        res.status(200).json({ message: "Utilisateur supprimé avec succès." });
+    } catch (error) {
+        res.status(500).json({ message: "Erreur serveur.", error });
     }
 };
 
 
-
-
-
-module.exports = { userRegister, userLogin , userResetPassword}
+module.exports ={
+    register,
+    login,
+    forgotPassword,
+    resetPassword,
+    updateUser,
+    uploadSignature,
+    deleteUser
+}

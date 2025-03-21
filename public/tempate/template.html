@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEMANDE DE PAIEMENT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            margin: 40px;
+        }
+        .container {
+            width: 100%;
+            border: 2px solid black;
+            padding: 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            width: 150px;
+        }
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+            border: 1px solid black;
+            padding: 5px;
+        }
+        .section {
+            margin-top: 20px;
+        }
+        .section span {
+            font-weight: bold;
+        }
+        .amount-box {
+            border: 2px solid black;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            position: absolute;
+            right: 40px;
+            top: 230px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table, .table td, .table th {
+            border: 2px solid black;
+        }
+        .table td {
+            padding: 10px;
+            text-align: center;
+        }
+        .signature-box {
+            margin-top: 20px;
+            border: 2px solid black;
+            padding: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <img src="logo.png" class="logo" alt="Green Pay">
+            <div>
+                <p>Tél : 27 22 54 96 97</p>
+                <p>06 BP 6093 ABJ 06</p>
+                <p>CDI : II PLATEAUX II</p>
+                <p>Régime d'imposition : RSI</p>
+            </div>
+        </div>
+
+        <div class="title">DEMANDE DE PAIEMENT</div>
+
+        <!-- DETAILS -->
+        <div class="section">
+            <p><span>MONTANT EN LETTRES :</span> {{montant_lettres}}</p>
+            <p><span>MOTIF :</span> {{motif}}</p>
+            <p><span>BENEFICIAIRE :</span> {{beneficiaire}}</p>
+        </div>
+
+        <div class="amount-box">
+            <p>MONTANT</p>
+            <p>{{montant}} FCFA</p>
+        </div>
+
+        <!-- SIGNATURES -->
+        <table class="table">
+            <tr>
+                <th>DEMANDEUR</th>
+                <th>APPROBATION DG</th>
+                <th>APPROBATION DAF</th>
+                <th>SIGNATURE</th>
+                <th>BENEFICIAIRE</th>
+            </tr>
+            <tr>
+                <td>{{demandeur_signature}}</td>
+                <td>{{approbation_dg}}</td>
+                <td>{{approbation_daf}}</td>
+                <td>{{signature}}</td>
+                <td>{{beneficiaire_signature}}</td>
+            </tr>
+        </table>
+
+        <p>NB : Déchargez et retournez ce document</p>
+    </div>
+
+</body>
+</html>
