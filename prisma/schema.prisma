@@ -35,6 +35,7 @@ model demandes_paiement {
   statut            demandes_paiement_statut? @default(validation_section)
   requiert_proforma Boolean?                  @default(false)
   date_creation     DateTime                  @default(now()) @db.Timestamp(0)
+  deleted_at        DateTime?                 @db.DateTime(0)
   agents            agents                    @relation(fields: [agent_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "demandes_paiement_ibfk_1")
   notifications     notifications[]
   paiements         paiements[]

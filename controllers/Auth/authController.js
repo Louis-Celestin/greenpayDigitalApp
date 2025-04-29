@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const { envoyerEmail } = require("../../config/emailConfig")
 const cloudinary = require("../../config/cloudinaryConfig");
-const { error } = require("console");
 require("crypto")
 
 const prisma = new PrismaClient();

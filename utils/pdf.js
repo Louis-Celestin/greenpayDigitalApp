@@ -34,10 +34,10 @@ const generateDemandePaiementPDF = async (demande, outputPath) => {
         .replace("{{motif}}", demande.motif || "")
         .replace("{{beneficiaire}}", demande.beneficiaire || "")
         .replace("{{demandeur_signature}}", demande.demandeur_signature || "Signé")
-        .replace("{{approbation_dg}}", demande.approbation_dg || "Signé")
-        .replace("{{approbation_daf}}", demande.approbation_daf || "Signé")
-        .replace("{{signature}}", demande.signature || "Signé")
-        .replace("{{beneficiaire_signature}}", demande.beneficiaire_signature || "Signé");
+        .replace("{{approbation_dg}}", demande.approbation_dg || "")
+        .replace("{{approbation_daf}}", demande.approbation_daf || "")
+        .replace("{{signature}}", demande.signature || "")
+        .replace("{{beneficiaire_signature}}", demande.beneficiaire_signature || "");
 
     await page.setContent(template, { waitUntil: "networkidle0" });
 

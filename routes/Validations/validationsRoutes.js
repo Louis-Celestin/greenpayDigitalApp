@@ -27,6 +27,7 @@ router.get("/getValidationsByValidateur/:validateur_id", getValidationsByValidat
 // router.get("/:demande_id", getValidationsByDemande);
 
 // ✅ Récupérer les validations en attente
+
 router.get("/en_attente/:validateur_id", getDemandesEnAttente);
 
 module.exports = router;

@@ -1,120 +1,212 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEMANDE DE PAIEMENT</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            margin: 40px;
-        }
-        .container {
-            width: 100%;
-            border: 2px solid black;
-            padding: 5px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            width: 150px;
-        }
-        .title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 10px;
-            border: 1px solid black;
-            padding: 5px;
-        }
-        .section {
-            margin-top: 20px;
-        }
-        .section span {
-            font-weight: bold;
-        }
-        .amount-box {
-            border: 2px solid black;
-            padding: 10px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            position: absolute;
-            right: 40px;
-            top: 230px;
-        }
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .table, .table td, .table th {
-            border: 2px solid black;
-        }
-        .table td {
-            padding: 10px;
-            text-align: center;
-        }
-        .signature-box {
-            margin-top: 20px;
-            border: 2px solid black;
-            padding: 40px;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEMANDE DE PAIEMENT</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin: 30px;
+    }
+
+    .container {
+      width: 100%;
+      /* border: 2px solid black; */
+      padding: 2px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      width: 150px;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 10px;
+      border: 3px solid black;
+      padding: 5px;
+      width: 50%;
+      margin: auto;
+    }
+
+    /* -------------- 
+       CHANGEMENT ICI 
+       -------------- */
+    .section {
+      margin-top: 10px; /* Au lieu de 50px */
+    }
+
+    .section span {
+      font-weight: bold;
+    }
+
+    .amount-box {
+      border: 2px solid black;
+      padding: 10px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      position: absolute;
+      right: 40px;
+      top: 240px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table, .table td, .table th {
+      border: 2px solid black;
+    }
+    .table td, .table th {
+      padding: 10px;
+      text-align: center;
+      height: 100px;
+    }
+
+    .note {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    /* Conteneur qui englobe Signatures et Banque, affichés côte à côte */
+    .signatures-banque-container {
+      display: flex;
+      flex-direction: row;
+      margin-top: 50px;
+    }
+
+    /* Bloc Signatures : 60% de la largeur */
+    .signatures-section {
+      width: 60%;
+      margin-top: 86px;
+    }
+
+    /* Bloc Banque : 30% de la largeur, avec une hauteur plus élevée */
+    .banque-section {
+      width: 30%;
+      min-height: 300px;
+      margin-left: auto;
+      margin-top: 13px;
+    }
+
+    .banque-box table {
+      border-collapse: collapse;
+      width: 100%;
+      border: 3px solid black;
+      margin-top: 20px;
+    }
+    .banque-box td {
+      border: 1px dashed black;
+      padding: 8px;
+    }
+
+    .signatures-section th {
+      background-color: #f2f2f2;
+      font-size: smaller;
+      height: min-content;
+      width: 20%;
+    }
+    .signatures-section td {
+      background-color: #ffffff;
+      font-size: smaller;
+    }
+    .signatures-section th {
+      background-color: #f2f2f2;
+      font-size: smaller;
+      height: min-content;
+      width: 20%;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- HEADER -->
-        <div class="header">
-            <img src="logo.png" class="logo" alt="Green Pay">
-            <div>
-                <p>Tél : 27 22 54 96 97</p>
-                <p>06 BP 6093 ABJ 06</p>
-                <p>CDI : II PLATEAUX II</p>
-                <p>Régime d'imposition : RSI</p>
-            </div>
-        </div>
+  <div class="container">
 
-        <div class="title">DEMANDE DE PAIEMENT</div>
-
-        <!-- DETAILS -->
-        <div class="section">
-            <p><span>MONTANT EN LETTRES :</span> {{montant_lettres}}</p>
-            <p><span>MOTIF :</span> {{motif}}</p>
-            <p><span>BENEFICIAIRE :</span> {{beneficiaire}}</p>
-        </div>
-
-        <div class="amount-box">
-            <p>MONTANT</p>
-            <p>{{montant}} FCFA</p>
-        </div>
-
-        <!-- SIGNATURES -->
-        <table class="table">
-            <tr>
-                <th>DEMANDEUR</th>
-                <th>APPROBATION DG</th>
-                <th>APPROBATION DAF</th>
-                <th>SIGNATURE</th>
-                <th>BENEFICIAIRE</th>
-            </tr>
-            <tr>
-                <td>{{demandeur_signature}}</td>
-                <td>{{approbation_dg}}</td>
-                <td>{{approbation_daf}}</td>
-                <td>{{signature}}</td>
-                <td>{{beneficiaire_signature}}</td>
-            </tr>
-        </table>
-
-        <p>NB : Déchargez et retournez ce document</p>
+    <!-- HEADER -->
+    <div class="header">
+      <img src="https://res.cloudinary.com/digitkbit/image/upload/v1744802840/logo_bdj4ks.png" class="logo" alt="Green Pay">
+      <div>
+        <p>Tél : 27 22 54 96 97</p>
+        <p>06 BP 6093 ABJ 06</p>
+        <p>CDI : II PLATEAUX II</p>
+        <p>Régime d'imposition : RSI</p>
+      </div>
     </div>
+    <div class="title">DEMANDE DE PAIEMENT</div>
+    <!-- DETAILS : Section rapprochée du logo grâce au margin-top réduit -->
+    <div class="section">
+      <p><span>MONTANT EN LETTRES :</span> {{montant_lettres}}</p>
+      <p><span>MOTIF :</span> {{motif}}</p>
+      <p><span>BÉNÉFICIAIRE :</span> {{beneficiaire}}</p>
+      <p>
+        <span>N° CNI / Mle :</span> 
+        ...........................................
+        <span>ENTREPRISE :</span>
+        ..........................................................
+      </p>
+    </div>
+
+    <div class="amount-box">
+      <table class="amount-table">
+        <tr>
+          <th><h4>MONTANT</h4></th>
+        </tr>
+        <tr>
+          <td>{{montant}} FCFA</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Conteneur englobant Signatures et Banque -->
+    <div class="signatures-banque-container">
+      
+      <!-- Section Signatures -->
+      <div class="signatures-section">
+        <table class="table">
+          <tr>
+            <th>DEMANDEUR</th>
+            <th>APPROBATION DG</th>
+            <th>APPROBATION DAF</th>
+            <th>SIGNATURE</th>
+            <th>BÉNÉFICIAIRE</th>
+          </tr>
+          <tr>
+            <td>{{demandeur_signature}}</td>
+            <td>{{approbation_dg}}</td>
+            <td>{{approbation_daf}}</td>
+            <td>{{signature}}</td>
+            <td>{{beneficiaire_signature}}</td>
+          </tr>
+        </table>
+        <p class="note">NB : Déchargez et retournez ce document</p>
+      </div>
+      
+      <!-- Section Banque -->
+      <div class="banque-section">
+        <div class="banque-box">
+          <table>
+            <tr><th><h4>A remplir obligatoirement</h4></th></tr>
+            <tr><td><strong>BANQUE :</strong> </td></tr>
+            <tr><td><strong>N° CHÈQUE :</strong> </td></tr>
+            <tr><td><strong>Date :</strong> </td></tr>
+            <tr><td><strong>Compte débiteur :</strong> </td></tr>
+            <tr><td><strong>N° de pièce :</strong> </td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div> <!-- Fin .signatures-banque-container -->
+
+  </div> <!-- Fin .container -->
 
 </body>
 </html>

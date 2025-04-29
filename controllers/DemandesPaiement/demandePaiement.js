@@ -395,7 +395,8 @@ const creerDemandePaiement = async (req, res) => {
  */
 const modifierDemandePaiement = async (req, res) => {
   const { demande_id } = req.params;
-  const { montant, motif, requiert_proforma, beneficiaire } = req.body;
+  const { montant, motif, requiert_proforma, beneficiaire, statut } = req.body;
+
 
   try {
     const demande = await prisma.demandes_paiement.findUnique({
@@ -405,6 +406,19 @@ const modifierDemandePaiement = async (req, res) => {
 
     if (!demande)
       return res.status(404).json({ message: "Demande non trouvée." });
+
+    if(demande.statut === "validation_entite_generale" && statut == "paye"){
+      const demandeModifiee = await prisma.demandes_paiement.update({
+        where: { id: parseInt(demande_id) },
+        data: {
+          statut : statut
+        },
+      });
+      return res.status(200).json({
+        message: "Demande mise à jour avec succès.",
+        demande: demandeModifiee,
+      });
+    }
 
     if (demande.statut !== "validation_section") {
       return res
@@ -435,7 +449,7 @@ const modifierDemandePaiement = async (req, res) => {
       },
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Demande mise à jour avec succès.",
       demande: demandeModifiee,
     });
@@ -454,10 +468,17 @@ const supprimerDemandePaiement = async (req, res) => {
   try {
     const demande = await prisma.demandes_paiement.findUnique({
       where: { id: parseInt(demande_id) },
+      include : {
+        validations : true
+      }
     });
 
     if (!demande)
       return res.status(404).json({ message: "Demande non trouvée." });
+
+    if(demande.validations.length > 0) {
+      return res.status(400).json({ message: "Demande déjà validée." });
+    }
 
     await prisma.demandes_paiement.update({
       where: { id: parseInt(demande_id) },
@@ -474,7 +495,7 @@ const supprimerDemandePaiement = async (req, res) => {
 };
 
 const getDemandesPaiement = async (req, res) => {
-  const { page = 1, limit = 5, utilisateur_id } = req.query;
+  const { page = 1, limit = 10, utilisateur_id } = req.query;
   const offset = (page - 1) * limit;
 
   try {
@@ -492,6 +513,7 @@ const getDemandesPaiement = async (req, res) => {
       orderBy: { date_creation: "desc" },
       where: {
         agent_id: parseInt(utilisateur.agent_id),
+        deleted_at: null,
       },
       //     OR: [
       //         { statut: "validation_section", agents: { section_id: utilisateur.agents.section_id } },
@@ -604,13 +626,13 @@ const demandesCountByUser = async (req, res) => {
       prisma.demandes_paiement.count({
         where: { statut: "rejete", agent_id: agentId },
       }),
-      prisma.paiements.count({
-        where: { demandes_paiement: { agent_id: agentId } },
+      prisma.demandes_paiement.count({
+        where: { statut: "paye", agent_id: agentId },
       }),
       prisma.demandes_paiement.aggregate({
         _sum: { montant: true },
         where: {
-          paiements: { some: {} },
+          statut: "paye",
           agent_id: agentId,
         },
       }),
@@ -732,6 +754,7 @@ const demandesCountByResponsableSection = async (req, res) => {
 
 
 const demandesCountByRef = async (req, res) => {
+
   try {
       const word = req.headers.authorization;
       if (!word) {

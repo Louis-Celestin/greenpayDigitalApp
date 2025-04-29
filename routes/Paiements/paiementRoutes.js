@@ -6,10 +6,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const {generateDemandePaiementPDF} =  require("../../utils/pdf")
 const { 
-    effectuerPaiement, 
-    modifierPaiement, 
-    supprimerPaiement, 
-    getPaiements, 
+    effectuerPaiement,
     getPaiementByDemande 
 } = require("../../controllers/Paiements/paiementController");
 
@@ -19,18 +16,18 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ✅ Effectuer un paiement (avec preuve)
-router.post("/effectuerPaiement/:demande_id", upload.array("fichiers"), effectuerPaiement);
+router.post("/effectuerPaiement/:demande_id", upload.array("preuvesPaiement"), effectuerPaiement);
 
-// ✅ Modifier un paiement
-router.put("/:paiement_id", modifierPaiement);
+// // ✅ Modifier un paiement
+// router.put("/:paiement_id", modifierPaiement);
 
-// ✅ Supprimer un paiement (soft delete)
-router.delete("/:paiement_id", supprimerPaiement);
+// // ✅ Supprimer un paiement (soft delete)
+// router.delete("/:paiement_id", supprimerPaiement);
 
-// ✅ Récupérer tous les paiements
-router.get("/", getPaiements);
+// // ✅ Récupérer tous les paiements
+// router.get("/", getPaiements);
 
-// ✅ Récupérer un paiement d’une demande spécifique
+// // ✅ Récupérer un paiement d’une demande spécifique
 router.get("/:demande_id", getPaiementByDemande);
 
 
