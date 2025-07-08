@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DEMANDE DE PAIEMENT</title>
   <style>
     body {
@@ -13,7 +13,6 @@
 
     .container {
       width: 100%;
-      /* border: 2px solid black; */
       padding: 2px;
     }
 
@@ -37,15 +36,27 @@
       margin: auto;
     }
 
-    /* -------------- 
-       CHANGEMENT ICI 
-       -------------- */
-    .section {
-      margin-top: 10px; /* Au lieu de 50px */
+    /* ✅ Détails + montant côte à côte */
+    .details-montant-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 10px;
+      gap: 20px;
     }
 
-    .section span {
+    .details-section {
+      flex: 1;
+    }
+
+    .details-section span {
       font-weight: bold;
+    }
+
+    .motif {
+      display: inline-block;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .amount-box {
@@ -54,18 +65,18 @@
       text-align: center;
       font-size: 16px;
       font-weight: bold;
-      position: absolute;
-      right: 40px;
-      top: 240px;
+      width: min-content;
     }
 
     .table {
       width: 100%;
       border-collapse: collapse;
     }
+
     .table, .table td, .table th {
       border: 2px solid black;
     }
+
     .table td, .table th {
       padding: 10px;
       text-align: center;
@@ -77,20 +88,17 @@
       margin-top: 10px;
     }
 
-    /* Conteneur qui englobe Signatures et Banque, affichés côte à côte */
     .signatures-banque-container {
       display: flex;
       flex-direction: row;
       margin-top: 50px;
     }
 
-    /* Bloc Signatures : 60% de la largeur */
     .signatures-section {
       width: 60%;
       margin-top: 86px;
     }
 
-    /* Bloc Banque : 30% de la largeur, avec une hauteur plus élevée */
     .banque-section {
       width: 30%;
       min-height: 300px;
@@ -104,6 +112,7 @@
       border: 3px solid black;
       margin-top: 20px;
     }
+
     .banque-box td {
       border: 1px dashed black;
       padding: 8px;
@@ -115,15 +124,10 @@
       height: min-content;
       width: 20%;
     }
+
     .signatures-section td {
       background-color: #ffffff;
       font-size: smaller;
-    }
-    .signatures-section th {
-      background-color: #f2f2f2;
-      font-size: smaller;
-      height: min-content;
-      width: 20%;
     }
   </style>
 </head>
@@ -141,35 +145,42 @@
         <p>Régime d'imposition : RSI</p>
       </div>
     </div>
+
+    <!-- TITRE -->
     <div class="title">DEMANDE DE PAIEMENT</div>
-    <!-- DETAILS : Section rapprochée du logo grâce au margin-top réduit -->
-    <div class="section">
-      <p><span>MONTANT EN LETTRES :</span> {{montant_lettres}}</p>
-      <p><span>MOTIF :</span> {{motif}}</p>
-      <p><span>BÉNÉFICIAIRE :</span> {{beneficiaire}}</p>
-      <p>
-        <span>N° CNI / Mle :</span> 
-        ...........................................
-        <span>ENTREPRISE :</span>
-        ..........................................................
-      </p>
+
+    <!-- ✅ DÉTAILS + MONTANT côte à côte -->
+    <div class="details-montant-wrapper">
+      <!-- Détails -->
+      <div class="details-section">
+        <p><span>MONTANT EN LETTRES :</span> {{montant_lettres}}</p>
+        <p><span>MOTIF :</span>{{motif}}</p>
+        <p><span>BÉNÉFICIAIRE :</span> {{beneficiaire}}</p>
+        <p>
+          <span>N° CNI / Mle :</span> 
+          ...........................................
+          <span>ENTREPRISE :</span>
+          ..........................................................
+        </p>
+      </div>
+
+      <!-- Montant -->
+      <div class="amount-box">
+        <table class="amount-table">
+          <tr>
+            <th><h4>MONTANT</h4></th>
+          </tr>
+          <tr>
+            <td>{{montant}} FCFA</td>
+          </tr>
+        </table>
+      </div>
     </div>
 
-    <div class="amount-box">
-      <table class="amount-table">
-        <tr>
-          <th><h4>MONTANT</h4></th>
-        </tr>
-        <tr>
-          <td>{{montant}} FCFA</td>
-        </tr>
-      </table>
-    </div>
-
-    <!-- Conteneur englobant Signatures et Banque -->
+    <!-- SIGNATURES & BANQUE -->
     <div class="signatures-banque-container">
       
-      <!-- Section Signatures -->
+      <!-- SIGNATURES -->
       <div class="signatures-section">
         <table class="table">
           <tr>
@@ -190,7 +201,7 @@
         <p class="note">NB : Déchargez et retournez ce document</p>
       </div>
       
-      <!-- Section Banque -->
+      <!-- INFOS BANQUE -->
       <div class="banque-section">
         <div class="banque-box">
           <table>
@@ -204,9 +215,9 @@
         </div>
       </div>
 
-    </div> <!-- Fin .signatures-banque-container -->
+    </div> <!-- Fin signatures-banque-container -->
 
-  </div> <!-- Fin .container -->
+  </div> <!-- Fin container -->
 
 </body>
 </html>

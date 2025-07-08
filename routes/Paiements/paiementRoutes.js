@@ -10,8 +10,6 @@ const {
     getPaiementByDemande 
 } = require("../../controllers/Paiements/paiementController");
 
-
-
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 

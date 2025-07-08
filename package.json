@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.11.0",
     "axios": "^1.8.3",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
@@ -33,6 +33,6 @@
     "to-words": "^4.3.0"
   },
   "devDependencies": {
-    "prisma": "^6.4.1"
+    "prisma": "^6.11.0"
   }
 }

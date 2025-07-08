@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+const { uploadFile } = require("../../controllers/Upload/cloudinaryController");
 const {
     creerDemandePaiement,
     modifierDemandePaiement,
@@ -18,8 +19,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ✅ Route pour créer une demande de paiement
 router.post("/createDemandePaiement", upload.single("proforma"), creerDemandePaiement);
 
+// ✅ Route pour uploader de fichier
+router.post("/upload", upload.single("file"), uploadFile);
+
 // ✅ Route pour modifier une demande de paiement
-router.put("/modifyDemandePaiement/:demande_id", upload.single("proforma"), modifierDemandePaiement);
+router.put("/modifyDemandePaiement/:demande_id",upload.any(), modifierDemandePaiement);
 
 // ✅ Route pour supprimer une demande de paiement (soft delete)
 router.delete("/deleteDemandePaiement/:demande_id", supprimerDemandePaiement);

@@ -3,6 +3,7 @@ const cloudinary = require("../../config/cloudinaryConfig");
 const prisma = new PrismaClient();
 const { envoyerEmail } = require("../../config/emailConfig");
 const jwt = require("jsonwebtoken");
+const { envoyerFichiersParMail } = require("../../utils/notifications");
 /**
  * ✅ Fonction pour uploader un fichier sur Cloudinary
  */
@@ -18,256 +19,6 @@ const uploadToCloudinary = (fileBuffer) => {
     stream.end(fileBuffer);
   });
 };
-
-/**
- * ✅ Déterminer le validateur initial
- */
-// const determinerValidateurInitial = async (agent) => {
-//     let statutInitial = "validation_section";
-//     let validateurInitial = null;
-
-//     // 🔹 Si l'agent a un responsable direct, ce responsable est le validateur
-//     if (agent.superieur_id) {
-//         validateurInitial = await prisma.agents.findUnique({
-//             where: { id: agent.superieur_id },
-//         });
-
-//         // 🔹 On adapte le statut en fonction du niveau hiérarchique
-//         if (validateurInitial && validateurInitial.fonction.includes("Responsable d'entité")) {
-//             statutInitial = "validation_entite";
-//         } else if (validateurInitial && validateurInitial.fonction.includes("Responsable Entité Générale")) {
-//             statutInitial = "validation_entite_generale";
-//         } else if (validateurInitial && validateurInitial.fonction.includes("Responsable Financier")) {
-//             statutInitial = "validation_entite_finance";
-//         } else if (validateurInitial && validateurInitial.fonction.includes("Directeur Général")) {
-//             statutInitial = "validation_DG";
-//         }
-//     } else {
-//         // 🔹 Si aucun supérieur n'est trouvé, on laisse la demande en statut initial
-//         statutInitial = "validation_section";
-//     }
-
-//     return { statutInitial, validateurInitial };
-// };
-
-// const determinerValidateurInitial = async (agent) => {
-//     let statutInitial = "validation_section"; // 🔹 Par défaut, on commence au niveau section
-//     let validateurInitial = null;
-
-//     if (agent.fonction.includes("Agent")) {
-//         // 🔹 Un agent est validé par son Responsable de Section
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { section_id: agent.section_id, fonction: "Responsable de section" },
-//         });
-//     } else if (agent.fonction.includes("Responsable de section")) {
-//         // 🔹 Un Responsable de Section est validé par son Responsable d'Entité
-//         statutInitial = "validation_entite";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { entite_id: agent.entite_id, fonction: "Responsable d'entité" },
-//         });
-//     } else if (agent.fonction.includes("Responsable d'entité")) {
-//         // 🔹 Un Responsable d'Entité est validé par le DG (Responsable Entité Générale)
-//         statutInitial = "validation_entite_generale";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { fonction: "Responsable Entité Générale" },
-//         });
-//     } else if (agent.fonction.includes("Responsable Entité Générale")) {
-//         // 🔹 Le DG (Responsable Entité Générale) est validé par le DAF (Responsable Entité Financière)
-//         statutInitial = "validation_entite_finance";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { fonction: "Responsable Entité Financière" },
-//         });
-//     }
-
-//     return { statutInitial, validateurInitial };
-// };
-
-// const determinerValidateurInitial = async (agent) => {
-//     let statutInitial = "validation_section";
-//     let validateurInitial = null;
-
-//     if (agent.fonction.includes("Agent")) {
-//         // ✅ Un Agent est validé par son Responsable de Section
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { section_id: agent.section_id, fonction: "Responsable de section" },
-//         });
-//     } else if (agent.fonction.includes("Responsable de section")) {
-//         // ✅ Un Responsable de Section est validé par son Responsable d'Entité
-//         statutInitial = "validation_entite";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { entite_id: agent.entite_id, fonction: "Responsable d'entité" },
-//         });
-//     } else if (agent.fonction.includes("Responsable d'entité")) {
-//         // ✅ Un Responsable d'Entité est validé par le DG
-//         statutInitial = "validation_entite_generale";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { fonction: "Responsable Entité Générale" },
-//         });
-//     } else if (agent.fonction.includes("Responsable Entité Générale")) {
-//         // 🚨 Exception #1 : Le DG est validé par le DAF
-//         statutInitial = "validation_entite_finance";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { fonction: "Responsable Entité Financière" },
-//         });
-//     } else if (agent.fonction.includes("Responsable Entité Financière")) {
-//         // 🚨 Exception #2 : Le DAF est validé par le DG
-//         statutInitial = "validation_entite_generale";
-//         validateurInitial = await prisma.agents.findFirst({
-//             where: { fonction: "Responsable Entité Générale" },
-//         });
-//     }
-
-//     return { statutInitial, validateurInitial };
-// };
-
-// const creerDemandePaiement = async (req, res) => {
-//     console.log(req.file)
-//     let { agent_id, montant, motif, requiert_proforma, beneficiaire } = req.body;
-
-//     try {
-//         const agent = await prisma.agents.findUnique({ where: { id: parseInt(agent_id) } });
-//         if (!agent) return res.status(404).json({ message: "Agent non trouvé." });
-
-//         const { statutInitial, validateurInitial } = await determinerValidateurInitial(agent);
-
-//         if (!validateurInitial) {
-//             return res.status(400).json({ message: "Aucun validateur initial trouvé pour cette demande. Vérifiez les responsables." });
-//         }
-
-//         let proformaUrl = null;
-//         if (requiert_proforma === "true" && req.file) {
-//             proformaUrl = await uploadToCloudinary(req.file.buffer);
-//         }
-
-//         const transactionResult = await prisma.$transaction(async (tx) => {
-//             const demande = await tx.demandes_paiement.create({
-//                 data: {
-//                     agent_id: parseInt(agent_id),
-//                     montant: parseFloat(montant),
-//                     motif,
-//                     beneficiaire,
-//                     statut: statutInitial,
-//                     requiert_proforma: Boolean(requiert_proforma),
-//                 },
-//             });
-
-//             if (proformaUrl) {
-//                 await tx.proformas.create({ data: { demande_id: demande.id, fichier: proformaUrl } });
-//             }
-
-//             // ✅ Notifier le validateur initial par e-mail avec un bouton de validation
-//             const validateur = await tx.utilisateurs.findFirst({
-//                 where: { agent_id: validateurInitial.id },
-//                 include: { agents: true },
-//             });
-
-//             if (validateur) {
-//                 console.log(`🟢 Email envoyé à ${validateur.email}`);
-
-//                 // 🔗 URL du bouton de validation (MODIFIER SELON TON FRONTEND)
-//                 const validationURL = ``;
-
-//                 const sujet = `Nouvelle demande de paiement #${demande.id} en attente`;
-//                 const message = `
-//                     <p>Bonjour ${validateur.agents.nom},</p>
-//                     <p>Une nouvelle demande de paiement a été créée par <strong>${agent.nom}</strong>.</p>
-//                     <p><strong>Montant :</strong> ${montant} FCFA</p>
-//                     <p><strong>Motif :</strong> ${motif}</p>
-//                     <p>Merci de la valider en cliquant sur le bouton ci-dessous :</p>
-//                     <p style="text-align: center;">
-//                         <a href="${validationURL}"
-//                             style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
-//                             ✅ Valider la demande
-//                         </a>
-//                     </p>
-//                     <p>Ou copiez ce lien dans votre navigateur :</p>
-//                     <p>${validationURL}</p>
-//                     <p>Cordialement,</p>
-//                     <p>GreenPay CI</p>`;
-
-//                 await envoyerEmail(validateur.email, sujet, message);
-//             } else {
-//                 console.log("⚠️ Aucun utilisateur trouvé pour ce validateur.");
-//             }
-
-//             return demande;
-//         });
-
-//         res.status(201).json({ message: "Demande créée avec succès.", demande: transactionResult });
-//     } catch (error) {
-//         console.error("❌ Erreur :", error);
-//         res.status(500).json({ message: "Erreur serveur.", error });
-//     }
-// };
-
-// /**
-//  * ✅ Modifier une demande de paiement
-//  */
-// const modifierDemandePaiement = async (req, res) => {
-//     const { demande_id } = req.params;
-//     const { montant, motif, requiert_proforma, beneficiaire } = req.body;
-//     let proformaUrl = null;
-
-//     try {
-//         const demande = await prisma.demandes_paiement.findUnique({
-//             where: { id: parseInt(demande_id) },
-//             include: { proformas: true },
-//         });
-
-//         if (!demande) return res.status(404).json({ message: "Demande non trouvée." });
-
-//         if (demande.statut !== "validation_section") {
-//             return res.status(400).json({ message: "Modification impossible après validation." });
-//         }
-
-//         if (requiert_proforma === "true" && req.file) {
-//             proformaUrl = await uploadToCloudinary(req.file.buffer);
-//             if (demande.proformas.length > 0) {
-//                 await prisma.proformas.deleteMany({ where: { demande_id: parseInt(demande_id) } });
-//             }
-//             await prisma.proformas.create({ data: { demande_id: parseInt(demande_id), fichier: proformaUrl } });
-//         }
-
-//         const demandeModifiee = await prisma.demandes_paiement.update({
-//             where: { id: parseInt(demande_id) },
-//             data: { montant, motif, beneficiaire, requiert_proforma: requiert_proforma === "true" },
-//         });
-
-//         res.status(200).json({ message: "Demande mise à jour avec succès.", demande: demandeModifiee });
-//     } catch (error) {
-//         console.error("Erreur :", error);
-//         res.status(500).json({ message: "Erreur serveur.", error });
-//     }
-// };
-
-// /**
-//  * ✅ Supprimer une demande (soft delete)
-//  */
-// const supprimerDemandePaiement = async (req, res) => {
-//     const { demande_id } = req.params;
-
-//     try {
-//         const demande = await prisma.demandes_paiement.findUnique({
-//             where: { id: parseInt(demande_id) },
-//         });
-
-//         if (!demande) return res.status(404).json({ message: "Demande non trouvée." });
-
-//         await prisma.demandes_paiement.update({
-//             where: { id: parseInt(demande_id) },
-//             data: { deleted_at: new Date() },
-//         });
-
-//         res.status(200).json({ message: "Demande supprimée avec succès (soft delete)." });
-//     } catch (error) {
-//         console.error("Erreur :", error);
-//         res.status(500).json({ message: "Erreur serveur.", error });
-//     }
-// };
-
-/**
- * ✅ Récupérer les demandes de paiement en fonction du rôle de l'utilisateur connecté
- */
 
 const determinerValidateurInitial = async (agent) => {
   let statutInitial = "validation_section";
@@ -307,33 +58,33 @@ const determinerValidateurInitial = async (agent) => {
   return { statutInitial, validateurInitial };
 };
 
-/**
- * ✅ Créer une demande de paiement
- */
+
+
+
 const creerDemandePaiement = async (req, res) => {
   let { agent_id, montant, motif, requiert_proforma, beneficiaire } = req.body;
 
   try {
+    // 1️⃣ Récupération de l'agent
     const agent = await prisma.agents.findUnique({
       where: { id: parseInt(agent_id) },
     });
     if (!agent) return res.status(404).json({ message: "Agent non trouvé." });
 
-    const { statutInitial, validateurInitial } =
-      await determinerValidateurInitial(agent);
-
+    // 2️⃣ Déterminer le statut initial et le validateur
+    const { statutInitial, validateurInitial } = await determinerValidateurInitial(agent);
     if (!validateurInitial) {
-      return res.status(400).json({
-        message: "Aucun validateur initial trouvé pour cette demande.",
-      });
+      return res.status(400).json({ message: "Aucun validateur initial trouvé pour cette demande." });
     }
 
+    // 3️⃣ Uploader la proforma avant la transaction
     let proformaUrl = null;
     if (requiert_proforma === "true" && req.file) {
       proformaUrl = await uploadToCloudinary(req.file.buffer);
     }
 
-    const transactionResult = await prisma.$transaction(async (tx) => {
+    // 4️⃣ Créer la demande + proforma dans la base (transaction)
+    const demandeCree = await prisma.$transaction(async (tx) => {
       const demande = await tx.demandes_paiement.create({
         data: {
           agent_id: parseInt(agent_id),
@@ -347,56 +98,62 @@ const creerDemandePaiement = async (req, res) => {
 
       if (proformaUrl) {
         await tx.proformas.create({
-          data: { demande_id: demande.id, fichier: proformaUrl },
+          data: {
+            demande_id: demande.id,
+            fichier: proformaUrl,
+          },
         });
-      }
-
-      const validateur = await tx.utilisateurs.findFirst({
-        where: { agent_id: validateurInitial.id },
-        include: { agents: true },
-      });
-
-      if (validateur) {
-        const validationURL = ``; // 🔗 Modifier l'URL en fonction de ton frontend
-
-        const sujet = `Nouvelle demande de paiement #${demande.id} en attente`;
-        const message = `
-                    <p>Bonjour ${validateur.agents.nom},</p>
-                    <p>Une nouvelle demande de paiement a été créée par <strong>${agent.nom}</strong>.</p>
-                    <p><strong>Montant :</strong> ${montant} FCFA</p>
-                    <p><strong>Motif :</strong> ${motif}</p>
-                    <p>Merci de la valider en cliquant sur le bouton ci-dessous :</p>
-                    <p style="text-align: center;">
-                        <a href="${validationURL}" 
-                            style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
-                            ✅ Valider la demande
-                        </a>
-                    </p>
-                `;
-
-        await envoyerEmail(validateur.email, sujet, message);
       }
 
       return demande;
     });
 
+    // 5️⃣ Récupération du validateur utilisateur (après transaction)
+    const validateur = await prisma.utilisateurs.findFirst({
+      where: { agent_id: validateurInitial.id },
+      include: { agents: true },
+    });
+
+    // 6️⃣ Envoi d'email après la transaction
+    if (validateur) {
+      const validationURL = `https://achats.greenpayci.com/validations/${demandeCree.id}`;
+      const sujet = `Nouvelle demande de paiement #${demandeCree.id} en attente`;
+      const message = `
+        <p>Bonjour ${validateur.agents.nom},</p>
+        <p>Une nouvelle demande de paiement a été créée par <strong>${agent.nom}</strong>.</p>
+        <p><strong>Montant :</strong> ${montant} FCFA</p>
+        <p><strong>Motif :</strong> ${motif}</p>
+        <p>Merci de la valider en cliquant sur le bouton ci-dessous :</p>
+        <p style="text-align: center;">
+          <a href="${validationURL}" 
+            style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+            ✅ Valider la demande
+          </a>
+        </p>
+      `;
+
+      await envoyerEmail(validateur.email, sujet, message);
+    }
+
+    // 7️⃣ Retour au frontend
     res.status(201).json({
       message: "Demande créée avec succès.",
-      demande: transactionResult,
+      demande: demandeCree,
     });
+
   } catch (error) {
     console.error("❌ Erreur :", error);
     res.status(500).json({ message: "Erreur serveur.", error });
   }
 };
 
-/**
- * ✅ Modifier une demande de paiement
- */
+
 const modifierDemandePaiement = async (req, res) => {
   const { demande_id } = req.params;
-  const { montant, motif, requiert_proforma, beneficiaire, statut } = req.body;
+  const { montant, motif, requiert_proforma, beneficiaire, statut, moyen_paiement } = req.body;
 
+  const documents = Array.isArray(req.body.documents) ? req.body.documents : [req.body.documents];
+  const types = Array.isArray(req.body.types) ? req.body.types : [req.body.types];
 
   try {
     const demande = await prisma.demandes_paiement.findUnique({
@@ -404,60 +161,87 @@ const modifierDemandePaiement = async (req, res) => {
       include: { proformas: true },
     });
 
-    if (!demande)
-      return res.status(404).json({ message: "Demande non trouvée." });
+    if (!demande) return res.status(404).json({ message: "Demande non trouvée." });
 
-    if(demande.statut === "validation_entite_generale" && statut == "paye"){
-      const demandeModifiee = await prisma.demandes_paiement.update({
+    const transitionsAutorisees = {
+      validation_entite_generale: ["en_attente_paiement", "paye", "rejete"],
+      en_attente_paiement: ["paye", "rejete"],
+    };
+
+    const transitionsPossibles = transitionsAutorisees[demande.statut] || [];
+    if (!transitionsPossibles.includes(statut)) {
+      return res.status(400).json({ message: `Changement de statut non autorisé depuis '${demande.statut}' vers '${statut}'.` });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 💾 en_attente_paiement → stocker le lien signé REG
+      if (statut === "en_attente_paiement") {
+        const indexReg = types.findIndex(t => t === "signe_reg");
+        if (indexReg !== -1 && documents[indexReg]) {
+          await tx.demandes_paiement.update({
+            where: { id: parseInt(demande_id) },
+            data: {
+              demande_physique_signee_url: documents[indexReg],
+            },
+          });
+        }
+      }
+
+      // 💾 paye → créer ligne paiement + documents liés
+      if (statut === "paye") {
+        const paiement = await tx.paiements.create({
+          data: {
+            demande_id: parseInt(demande_id),
+            moyen_paiement,
+          },
+        });
+
+        const docsPaiement = documents
+          .map((url, idx) => ({ url, type: types[idx] }))
+          .filter(doc => doc.type === "preuve_paiement");
+
+        for (const doc of docsPaiement) {
+          await tx.documents_paiements.create({
+            data: {
+              paiement_id: paiement.id,
+              url: doc.url,
+              type: doc.type,
+            },
+          });
+        }
+      }
+
+      // ⚙️ Mise à jour générale
+      const updated = await tx.demandes_paiement.update({
         where: { id: parseInt(demande_id) },
         data: {
-          statut : statut
+          montant: montant ? parseFloat(montant) : demande.montant,
+          motif: motif || demande.motif,
+          beneficiaire: beneficiaire || demande.beneficiaire,
+          requiert_proforma: requiert_proforma === "true",
+          statut,
         },
       });
-      return res.status(200).json({
-        message: "Demande mise à jour avec succès.",
-        demande: demandeModifiee,
-      });
-    }
 
-    if (demande.statut !== "validation_section") {
-      return res
-        .status(400)
-        .json({ message: "Modification impossible après validation." });
-    }
-
-    let proformaUrl = null;
-    if (requiert_proforma === "true" && req.file) {
-      proformaUrl = await uploadToCloudinary(req.file.buffer);
-      if (demande.proformas.length > 0) {
-        await prisma.proformas.deleteMany({
-          where: { demande_id: parseInt(demande_id) },
-        });
-      }
-      await prisma.proformas.create({
-        data: { demande_id: parseInt(demande_id), fichier: proformaUrl },
-      });
-    }
-
-    const demandeModifiee = await prisma.demandes_paiement.update({
-      where: { id: parseInt(demande_id) },
-      data: {
-        montant,
-        motif,
-        beneficiaire,
-        requiert_proforma: requiert_proforma === "true",
-      },
+      return updated;
     });
+
+    // ✉️ Envoi des fichiers par mail (à garder)
+    await envoyerFichiersParMail(parseInt(demande_id));
 
     return res.status(200).json({
       message: "Demande mise à jour avec succès.",
-      demande: demandeModifiee,
+      demande: result
     });
   } catch (error) {
-    console.error("Erreur :", error);
-    res.status(500).json({ message: "Erreur serveur.", error });
+    console.error("🔥 Erreur :", error);
+    return res.status(500).json({ message: "Erreur serveur", error });
   }
 };
+
+
+
+
 
 /**
  * ✅ Supprimer une demande (soft delete)
@@ -478,6 +262,15 @@ const supprimerDemandePaiement = async (req, res) => {
 
     if(demande.validations.length > 0) {
       return res.status(400).json({ message: "Demande déjà validée." });
+    }
+
+    const validations = await prisma.validations.findMany({
+      where: { demande_id: parseInt(demande_id) },
+    });
+    if (validations.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "Suppression impossible après validation." });
     }
 
     await prisma.demandes_paiement.update({
@@ -515,13 +308,6 @@ const getDemandesPaiement = async (req, res) => {
         agent_id: parseInt(utilisateur.agent_id),
         deleted_at: null,
       },
-      //     OR: [
-      //         { statut: "validation_section", agents: { section_id: utilisateur.agents.section_id } },
-      //         { statut: "validation_entite", agents: { entite_id: utilisateur.agents.entite_id } },
-      //         { statut: "validation_entite_finance" },
-      //         { statut: "validation_entite_generale" },
-      //     ],
-      // },
       include: { agents: true, proformas: true, validations: true },
     });
 
