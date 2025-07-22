@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -175,6 +176,7 @@ enum paiements_moyen_paiement {
   cheque
   mobile_money
   especes
+  virement_bancaire
 }
 
 enum validations_statut {

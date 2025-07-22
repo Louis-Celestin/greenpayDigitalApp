@@ -11,7 +11,8 @@ const {
     demandesCountByResponsableSection,
     demandesCountByRef,
     demandesCountByReg,
-    demandesCountByResponsableEntite
+    demandesCountByResponsableEntite,
+    getAllDemandesPaiement
 } = require("../../controllers/DemandesPaiement/demandePaiement");
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -30,6 +31,10 @@ router.delete("/deleteDemandePaiement/:demande_id", supprimerDemandePaiement);
 
 // ✅ Route pour récupérer toutes les demandes de paiement
 router.get("/getDemandePaiement", getDemandesPaiement);
+
+// ✅ Route pour récupérer toutes les demandes de paiement
+router.get("/getAllDemandePaiement", getAllDemandesPaiement);
+
 
 // ✅ Route pour récupérer une demande spécifique
 router.get("/getDemandePaiementById/:demande_id", getDemandePaiementById);

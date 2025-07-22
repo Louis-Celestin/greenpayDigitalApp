@@ -55,6 +55,24 @@ router.get("/download-pdf/:demande_id", async (req, res) => {
             return res.status(404).json({ message: "Demande introuvable." });
         }
 
+        const nbMentionSection = await prisma.validations.findFirst({
+            where : {
+                demande_id : parseInt(demande.id),
+                utilisateurs : {
+                    email : "sidoine@greenpayci.com"
+                }
+            },
+            select : {commentaire : true}
+        })
+        if (nbMentionSection === null) {
+            demande.nbMentionSection = "";
+        }else{
+            demande.nbMentionSection = nbMentionSection.commentaire
+        }
+
+        // console.log(demande)
+        // console.log(demande)
+
         // 🔹 Chemin sécurisé du fichier PDF
         const outputPath = path.resolve(__dirname, `../../public/pdfs/demande_paiement_${demande_id}.pdf`);
         console.log(`📄 Génération du PDF : ${outputPath}`);

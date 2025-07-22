@@ -8,7 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       font-size: 14px;
-      margin: 30px;
+      margin: 5px;
     }
 
     .container {
@@ -18,7 +18,9 @@
 
     .header {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      justify-content: space-between;
+      height: 100px;
     }
 
     .logo {
@@ -91,7 +93,7 @@
     .signatures-banque-container {
       display: flex;
       flex-direction: row;
-      margin-top: 50px;
+      margin-top: -40px;
     }
 
     .signatures-section {
@@ -137,7 +139,9 @@
 
     <!-- HEADER -->
     <div class="header">
-      <img src="https://res.cloudinary.com/digitkbit/image/upload/v1744802840/logo_bdj4ks.png" class="logo" alt="Green Pay">
+            <div>
+        <img src="https://res.cloudinary.com/digitkbit/image/upload/v1744802840/logo_bdj4ks.png" class="logo" alt="Green Pay">
+      </div>
       <div>
         <p>Tél : 27 22 54 96 97</p>
         <p>06 BP 6093 ABJ 06</p>
@@ -162,6 +166,7 @@
           <span>ENTREPRISE :</span>
           ..........................................................
         </p>
+        <p><span>Remarque :</span> {{note}}</p>
       </div>
 
       <!-- Montant -->

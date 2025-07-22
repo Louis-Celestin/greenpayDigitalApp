@@ -2,6 +2,7 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 const { ToWords } = require('to-words');
+const formatThousands = require('format-thousands');
 const toWords = new ToWords({
     localeCode: 'fr-FR',
     converterOptions: {
@@ -25,19 +26,21 @@ const generateDemandePaiementPDF = async (demande, outputPath) => {
     // 🔹 Charger le contenu HTML
     let template = fs.readFileSync(path.join(__dirname, "../public/tempate/template.html"), "utf8");
     const montant_lettres = toWords.convert(demande.montant).toUpperCase()
+    const montant_separe = formatThousands(demande.montant)
 
 
     // 🔹 Remplacement des variables dynamiques dans le template
     template = template
         .replace("{{montant_lettres}}", montant_lettres || "")
-        .replace("{{montant}}", demande.montant.toLocaleString() || "")
+        .replace("{{montant}}", montant_separe.toLocaleString() || "")
         .replace("{{motif}}", demande.motif || "")
         .replace("{{beneficiaire}}", demande.beneficiaire || "")
         .replace("{{demandeur_signature}}", demande.demandeur_signature || "Signé")
         .replace("{{approbation_dg}}", demande.approbation_dg || "")
         .replace("{{approbation_daf}}", demande.approbation_daf || "")
         .replace("{{signature}}", demande.signature || "")
-        .replace("{{beneficiaire_signature}}", demande.beneficiaire_signature || "");
+        .replace("{{beneficiaire_signature}}", demande.beneficiaire_signature || "")
+        .replace("{{note}}", demande.nbMentionSection || "");
 
     await page.setContent(template, { waitUntil: "networkidle0" });
 
